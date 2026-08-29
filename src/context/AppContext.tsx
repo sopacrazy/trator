@@ -12,7 +12,7 @@ interface AppContextData {
   addOperator: (operator: Omit<Operator, 'id' | 'active'>) => void;
   toggleOperatorActive: (id: string) => void;
   registerDeparture: (usage: Omit<UsageRecord, 'id' | 'status'>) => void;
-  registerReturn: (usageId: string, returnTime: string, finalKm: number, returnNotes?: string) => void;
+  registerReturn: (usageId: string, returnTime: string, finalRpm: number, returnNotes?: string) => void;
 }
 
 const AppContext = createContext<AppContextData>({} as AppContextData);
@@ -46,7 +46,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       tractorId: 't1',
       operatorId: 'o1',
       departureTime: `${todayStr}T08:30`,
-      initialKm: 12450,
+      initialRpm: 12450,
       destination: 'Linha Verde - Roçada',
       status: 'OPEN',
     },
@@ -55,10 +55,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       tractorId: 't2',
       operatorId: 'o2',
       departureTime: `${todayStr}T07:00`,
-      initialKm: 8500,
+      initialRpm: 8500,
       destination: 'Parque Central - Manutenção',
       returnTime: `${todayStr}T11:30`,
-      finalKm: 8515,
+      finalRpm: 8515,
       status: 'CLOSED',
     },
     {
@@ -66,10 +66,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       tractorId: 't3',
       operatorId: 'o3',
       departureTime: `${todayStr}T07:15`,
-      initialKm: 5200,
+      initialRpm: 5200,
       destination: 'Estrada Sul - Nivelamento',
       returnTime: `${todayStr}T16:00`,
-      finalKm: 5240,
+      finalRpm: 5240,
       status: 'CLOSED',
     },
   ]);
@@ -104,10 +104,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUsages([...usages, { ...usage, id: `u${Date.now()}`, status: 'OPEN' }]);
   };
 
-  const registerReturn = (usageId: string, returnTime: string, finalKm: number, returnNotes?: string) => {
-    setUsages(usages.map(u => 
-      u.id === usageId 
-        ? { ...u, returnTime, finalKm, returnNotes, status: 'CLOSED' }
+  const registerReturn = (usageId: string, returnTime: string, finalRpm: number, returnNotes?: string) => {
+    setUsages(usages.map(u =>
+      u.id === usageId
+        ? { ...u, returnTime, finalRpm, returnNotes, status: 'CLOSED' }
         : u
     ));
   };

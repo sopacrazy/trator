@@ -25,32 +25,32 @@ export function Historico() {
     }).sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
   }, [usages, filterTractor, filterOperator, filterStartDate, filterEndDate]);
 
-  const totalKmFiltered = useMemo(() => {
-    return filteredUsages.reduce((acc, u) => acc + ((u.finalKm || u.initialKm) - u.initialKm), 0);
+  const totalRpmFiltered = useMemo(() => {
+    return filteredUsages.reduce((acc, u) => acc + ((u.finalRpm || u.initialRpm) - u.initialRpm), 0);
   }, [filteredUsages]);
 
   const totalPages = Math.ceil(filteredUsages.length / itemsPerPage);
   const paginatedUsages = filteredUsages.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleExportCSV = () => {
-    const headers = ['ID', 'Operador', 'Trator', 'Placa', 'Saída', 'KM Inicial', 'Destino', 'Retorno', 'KM Final', 'KM Rodados', 'Status'];
-    
+    const headers = ['ID', 'Operador', 'Trator', 'Placa', 'Saída', 'RPM Inicial', 'Destino', 'Retorno', 'RPM Final', 'RPM Total', 'Status'];
+
     const rows = filteredUsages.map(u => {
       const op = operators.find(o => o.id === u.operatorId);
       const tr = tractors.find(t => t.id === u.tractorId);
-      const kmRodados = u.finalKm ? (u.finalKm - u.initialKm).toFixed(1) : '';
-      
+      const rpmTotal = u.finalRpm ? (u.finalRpm - u.initialRpm).toFixed(0) : '';
+
       return [
         u.id,
         op?.name || 'Desconhecido',
         tr?.name || 'Desconhecido',
         tr?.plate || '',
         new Date(u.departureTime).toLocaleString('pt-BR'),
-        u.initialKm,
+        u.initialRpm,
         u.destination,
         u.returnTime ? new Date(u.returnTime).toLocaleString('pt-BR') : '',
-        u.finalKm || '',
-        kmRodados,
+        u.finalRpm || '',
+        rpmTotal,
         u.status === 'OPEN' ? 'Em aberto' : 'Concluído'
       ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',');
     });
@@ -137,7 +137,7 @@ export function Historico() {
             {filteredUsages.length} registros encontrados
           </span>
           <span className="text-sm font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
-            Total do período: {totalKmFiltered.toFixed(1)} km
+            Total do período: {totalRpmFiltered.toFixed(0)} RPM
           </span>
         </div>
         
@@ -149,9 +149,9 @@ export function Historico() {
                 <th className="p-4 font-medium">Data Saída</th>
                 <th className="p-4 font-medium">Operador</th>
                 <th className="p-4 font-medium">Trator</th>
-                <th className="p-4 font-medium text-right">KM Saída</th>
-                <th className="p-4 font-medium text-right">KM Retorno</th>
-                <th className="p-4 font-medium text-right">Total (km)</th>
+                <th className="p-4 font-medium text-right">RPM Saída</th>
+                <th className="p-4 font-medium text-right">RPM Retorno</th>
+                <th className="p-4 font-medium text-right">Total (RPM)</th>
               </tr>
             </thead>
             <tbody>
@@ -175,10 +175,10 @@ export function Historico() {
                       <td className="p-4 text-sm text-gray-600">{formatDate(u.departureTime)}</td>
                       <td className="p-4 text-sm font-medium text-gray-800">{op?.name}</td>
                       <td className="p-4 text-sm text-gray-600">{tr?.name} <span className="block text-xs text-gray-400">{tr?.plate}</span></td>
-                      <td className="p-4 text-sm text-gray-600 text-right">{u.initialKm}</td>
-                      <td className="p-4 text-sm text-gray-600 text-right">{u.finalKm || '-'}</td>
+                      <td className="p-4 text-sm text-gray-600 text-right">{u.initialRpm}</td>
+                      <td className="p-4 text-sm text-gray-600 text-right">{u.finalRpm || '-'}</td>
                       <td className="p-4 text-sm font-bold text-gray-800 text-right">
-                        {u.finalKm ? (u.finalKm - u.initialKm).toFixed(1) : '-'}
+                        {u.finalRpm ? (u.finalRpm - u.initialRpm).toFixed(0) : '-'}
                       </td>
                     </tr>
                   )

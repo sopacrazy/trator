@@ -13,7 +13,7 @@ export function FormSaida({ onClose }: { onClose: () => void }) {
   const [operatorId, setOperatorId] = useState('');
   const [tractorId, setTractorId] = useState('');
   const [departureTime, setDepartureTime] = useState(getTodayStr());
-  const [initialKm, setInitialKm] = useState('');
+  const [initialRpm, setInitialRpm] = useState('');
   const [destination, setDestination] = useState('');
   const [departureNotes, setDepartureNotes] = useState('');
 
@@ -22,13 +22,13 @@ export function FormSaida({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!operatorId || !tractorId || !departureTime || !initialKm || !destination) return;
+    if (!operatorId || !tractorId || !departureTime || !initialRpm || !destination) return;
 
     registerDeparture({
       operatorId,
       tractorId,
       departureTime,
-      initialKm: Number(initialKm),
+      initialRpm: Number(initialRpm),
       destination,
       departureNotes
     });
@@ -85,14 +85,14 @@ export function FormSaida({ onClose }: { onClose: () => void }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">KM Inicial *</label>
-          <input 
-            type="number" 
+          <label className="block text-sm font-medium text-gray-700 mb-1">RPM Inicial *</label>
+          <input
+            type="number"
             required
             min="0"
-            step="0.1"
-            value={initialKm}
-            onChange={e => setInitialKm(e.target.value)}
+            step="1"
+            value={initialRpm}
+            onChange={e => setInitialRpm(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B5E20] focus:border-[#1B5E20] outline-none"
           />
         </div>

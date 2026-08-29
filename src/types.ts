@@ -18,11 +18,11 @@ export interface UsageRecord {
   tractorId: string;
   operatorId: string;
   departureTime: string;
-  initialKm: number;
+  initialRpm: number;
   destination: string;
   departureNotes?: string;
   returnTime?: string;
-  finalKm?: number;
+  finalRpm?: number;
   returnNotes?: string;
   status: 'OPEN' | 'CLOSED';
 }

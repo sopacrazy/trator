@@ -21,7 +21,7 @@ export function Dashboard() {
     u.status === 'CLOSED' && u.returnTime?.startsWith(today)
   );
 
-  const kmTotalHoje = usosConcluidosHoje.reduce((acc, u) => acc + ((u.finalKm || 0) - u.initialKm), 0);
+  const rpmTotalHoje = usosConcluidosHoje.reduce((acc, u) => acc + ((u.finalRpm || 0) - u.initialRpm), 0);
 
   const formatDate = (isoString: string) => {
     return new Date(isoString).toLocaleString('pt-BR', {
@@ -58,10 +58,10 @@ export function Dashboard() {
           icon={CheckCircle2} 
           colorClass="bg-green-100 text-green-600"
         />
-        <StatusCard 
-          title="KM total hoje" 
-          value={kmTotalHoje.toFixed(1)} 
-          icon={Route} 
+        <StatusCard
+          title="RPM total hoje"
+          value={rpmTotalHoje.toFixed(0)}
+          icon={Route}
           colorClass="bg-blue-100 text-blue-600"
         />
       </div>
@@ -78,7 +78,7 @@ export function Dashboard() {
                 <th className="p-4 font-medium">Operador</th>
                 <th className="p-4 font-medium">Trator</th>
                 <th className="p-4 font-medium">Saída</th>
-                <th className="p-4 font-medium">KM Inicial</th>
+                <th className="p-4 font-medium">RPM Inicial</th>
                 <th className="p-4 font-medium">Destino</th>
                 <th className="p-4 font-medium text-right">Ação</th>
               </tr>
@@ -97,7 +97,7 @@ export function Dashboard() {
                       <td className="p-4 font-medium text-gray-800">{op?.name}</td>
                       <td className="p-4 text-gray-600">{tr?.name} <span className="text-xs text-gray-400 block">{tr?.plate}</span></td>
                       <td className="p-4 text-gray-600">{formatDate(u.departureTime)}</td>
-                      <td className="p-4 text-gray-600">{u.initialKm}</td>
+                      <td className="p-4 text-gray-600">{u.initialRpm}</td>
                       <td className="p-4 text-gray-600">{u.destination}</td>
                       <td className="p-4 text-right">
                         <button 
@@ -129,7 +129,7 @@ export function Dashboard() {
                 <th className="p-4 font-medium">Trator</th>
                 <th className="p-4 font-medium">Saída</th>
                 <th className="p-4 font-medium">Retorno</th>
-                <th className="p-4 font-medium">KM Rodados</th>
+                <th className="p-4 font-medium">RPM Total</th>
               </tr>
             </thead>
             <tbody>
@@ -148,7 +148,7 @@ export function Dashboard() {
                       <td className="p-4 text-gray-600">{formatDate(u.departureTime)}</td>
                       <td className="p-4 text-gray-600">{u.returnTime ? formatDate(u.returnTime) : '-'}</td>
                       <td className="p-4 font-medium text-gray-800">
-                        {u.finalKm ? (u.finalKm - u.initialKm).toFixed(1) : '-'}
+                        {u.finalRpm ? (u.finalRpm - u.initialRpm).toFixed(0) : '-'}
                       </td>
                     </tr>
                   )
