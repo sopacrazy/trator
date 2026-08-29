@@ -50,7 +50,7 @@ export function Login({ onLogin }: { onLogin: () => void }) {
       {/* Right panel - form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-sm">
-          <div className="flex lg:hidden items-center gap-3 mb-8 text-[#1B5E20]">
+          <div className="flex items-center gap-3 mb-8 text-[#1B5E20]">
             <div className="bg-[#1B5E20]/10 p-2 rounded-xl">
               <Tractor size={26} />
             </div>
