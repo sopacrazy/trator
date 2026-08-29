@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
+import { exportHistoricoPdf } from '../lib/exportHistoricoPdf';
 
 export function Historico() {
   const { usages, tractors, operators } = useAppContext();
@@ -71,6 +72,41 @@ export function Historico() {
     });
   };
 
+  const formatDateOnly = (isoDate: string) => {
+    const [y, m, d] = isoDate.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const handleExportPDF = () => {
+    const tractorLabel = filterTractor
+      ? (() => {
+          const t = tractors.find(t => t.id === filterTractor);
+          return t ? `${t.name} (${t.plate})` : 'Todos';
+        })()
+      : 'Todos';
+
+    const operatorLabel = filterOperator
+      ? (operators.find(o => o.id === filterOperator)?.name || 'Todos')
+      : 'Todos';
+
+    let periodLabel = 'Todo o período';
+    if (filterStartDate && filterEndDate) {
+      periodLabel = `${formatDateOnly(filterStartDate)} a ${formatDateOnly(filterEndDate)}`;
+    } else if (filterStartDate) {
+      periodLabel = `A partir de ${formatDateOnly(filterStartDate)}`;
+    } else if (filterEndDate) {
+      periodLabel = `Até ${formatDateOnly(filterEndDate)}`;
+    }
+
+    exportHistoricoPdf(
+      filteredUsages,
+      tractors,
+      operators,
+      { tractorLabel, operatorLabel, periodLabel },
+      totalRpmFiltered
+    );
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -78,14 +114,24 @@ export function Historico() {
           <h1 className="text-2xl font-bold text-gray-900">Histórico de Uso</h1>
           <p className="text-gray-500">Consulte e exporte os registros completos.</p>
         </div>
-        <button 
-          onClick={handleExportCSV}
-          disabled={filteredUsages.length === 0}
-          className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Download size={20} />
-          Exportar CSV
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportCSV}
+            disabled={filteredUsages.length === 0}
+            className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download size={20} />
+            Exportar CSV
+          </button>
+          <button
+            onClick={handleExportPDF}
+            disabled={filteredUsages.length === 0}
+            className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#144d18] text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileText size={20} />
+            Exportar PDF
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-4">
