@@ -1,0 +1,6 @@
+{
+  "name": "Controle de Frota - Tratores",
+  "description": "Sistema de controle de uso de tratores municipais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
