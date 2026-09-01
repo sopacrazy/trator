@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import { ApiError } from '../lib/api';
 
 export function FormSaida({ onClose }: { onClose: () => void }) {
   const { tractors, operators, usages, registerDeparture } = useAppContext();
+  const { showSuccess } = useToast();
 
   const getTodayStr = () => {
     const today = new Date();
@@ -38,6 +40,7 @@ export function FormSaida({ onClose }: { onClose: () => void }) {
         destination,
         departureNotes
       });
+      showSuccess('Saída registrada com sucesso!');
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível registrar a saída.');

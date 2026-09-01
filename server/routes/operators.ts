@@ -35,6 +35,19 @@ operatorsRouter.post('/', asyncHandler(async (req, res) => {
   res.status(201).json(toDto({ id: insertId, name, registration, active: 1 }));
 }));
 
+operatorsRouter.patch('/:id', asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const { name, registration } = req.body as { name?: string; registration?: string };
+  if (!name || !registration) {
+    return res.status(400).json({ error: 'Informe nome e matrícula.' });
+  }
+  await pool.query('UPDATE operators SET name = ?, registration = ? WHERE id = ?', [name, registration, id]);
+  const [rows] = await pool.query('SELECT * FROM operators WHERE id = ?', [id]);
+  const operator = (rows as OperatorRow[])[0];
+  if (!operator) return res.status(404).json({ error: 'Operador não encontrado.' });
+  res.json(toDto(operator));
+}));
+
 operatorsRouter.patch('/:id/toggle', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
 

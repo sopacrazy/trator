@@ -11,10 +11,13 @@ interface AppContextData {
   usages: UsageRecord[];
   users: User[];
   addTractor: (tractor: Omit<Tractor, 'id' | 'active'>) => Promise<void>;
+  updateTractor: (id: string, tractor: Omit<Tractor, 'id' | 'active'>) => Promise<void>;
   toggleTractorActive: (id: string) => Promise<void>;
   addOperator: (operator: Omit<Operator, 'id' | 'active'>) => Promise<void>;
+  updateOperator: (id: string, operator: Omit<Operator, 'id' | 'active'>) => Promise<void>;
   toggleOperatorActive: (id: string) => Promise<void>;
   addUser: (user: { username: string; password: string; name: string }) => Promise<void>;
+  updateUser: (id: string, user: { username: string; password?: string; name: string }) => Promise<void>;
   toggleUserActive: (id: string) => Promise<void>;
   registerDeparture: (usage: Omit<UsageRecord, 'id' | 'status'>) => Promise<void>;
   registerReturn: (usageId: string, returnTime: string, finalRpm: number, returnNotes?: string) => Promise<void>;
@@ -52,6 +55,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setTractors(prev => [...prev, created]);
   };
 
+  const updateTractor = async (id: string, tractor: Omit<Tractor, 'id' | 'active'>) => {
+    const updated = await api.patch<Tractor>(`/tractors/${id}`, tractor);
+    setTractors(prev => prev.map(t => t.id === id ? updated : t));
+  };
+
   const toggleTractorActive = async (id: string) => {
     const updated = await api.patch<Tractor>(`/tractors/${id}/toggle`);
     setTractors(prev => prev.map(t => t.id === id ? updated : t));
@@ -62,6 +70,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setOperators(prev => [...prev, created]);
   };
 
+  const updateOperator = async (id: string, operator: Omit<Operator, 'id' | 'active'>) => {
+    const updated = await api.patch<Operator>(`/operators/${id}`, operator);
+    setOperators(prev => prev.map(o => o.id === id ? updated : o));
+  };
+
   const toggleOperatorActive = async (id: string) => {
     const updated = await api.patch<Operator>(`/operators/${id}/toggle`);
     setOperators(prev => prev.map(o => o.id === id ? updated : o));
@@ -70,6 +83,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const addUser = async (user: { username: string; password: string; name: string }) => {
     const created = await api.post<User>('/users', user);
     setUsers(prev => [...prev, created]);
+  };
+
+  const updateUser = async (id: string, user: { username: string; password?: string; name: string }) => {
+    const updated = await api.patch<User>(`/users/${id}`, user);
+    setUsers(prev => prev.map(u => u.id === id ? updated : u));
   };
 
   const toggleUserActive = async (id: string) => {
@@ -91,9 +109,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     <AppContext.Provider value={{
       currentPage, setCurrentPage, isLoading,
       tractors, operators, usages, users,
-      addTractor, toggleTractorActive,
-      addOperator, toggleOperatorActive,
-      addUser, toggleUserActive,
+      addTractor, updateTractor, toggleTractorActive,
+      addOperator, updateOperator, toggleOperatorActive,
+      addUser, updateUser, toggleUserActive,
       registerDeparture, registerReturn
     }}>
       {children}

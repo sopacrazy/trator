@@ -36,6 +36,19 @@ tractorsRouter.post('/', asyncHandler(async (req, res) => {
   res.status(201).json(toDto({ id: insertId, name, plate, model, active: 1 }));
 }));
 
+tractorsRouter.patch('/:id', asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const { name, plate, model } = req.body as { name?: string; plate?: string; model?: string };
+  if (!name || !plate || !model) {
+    return res.status(400).json({ error: 'Informe nome, placa e modelo.' });
+  }
+  await pool.query('UPDATE tractors SET name = ?, plate = ?, model = ? WHERE id = ?', [name, plate, model, id]);
+  const [rows] = await pool.query('SELECT * FROM tractors WHERE id = ?', [id]);
+  const tractor = (rows as TractorRow[])[0];
+  if (!tractor) return res.status(404).json({ error: 'Trator não encontrado.' });
+  res.json(toDto(tractor));
+}));
+
 tractorsRouter.patch('/:id/toggle', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
 

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import { ApiError } from '../lib/api';
 
 export function FormRetorno({ usageId, onClose }: { usageId: string, onClose: () => void }) {
   const { usages, tractors, operators, registerReturn } = useAppContext();
+  const { showSuccess } = useToast();
 
   const usage = usages.find(u => u.id === usageId);
   const tractor = tractors.find(t => t.id === usage?.tractorId);
@@ -44,6 +46,7 @@ export function FormRetorno({ usageId, onClose }: { usageId: string, onClose: ()
     setIsSubmitting(true);
     try {
       await registerReturn(usage.id, returnTime, finalRpmNum, returnNotes);
+      showSuccess('Retorno registrado com sucesso!');
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível registrar o retorno.');

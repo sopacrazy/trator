@@ -46,6 +46,35 @@ usersRouter.post('/', asyncHandler(async (req, res) => {
   res.status(201).json({ id: String(insertId), username, name, active: true });
 }));
 
+usersRouter.patch('/:id', asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  const { name, username, password } = req.body as { name?: string; username?: string; password?: string };
+
+  if (!name || !username) {
+    return res.status(400).json({ error: 'Informe nome e usuário.' });
+  }
+  if (password && password.length < 6) {
+    return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' });
+  }
+
+  const [existing] = await pool.query('SELECT id FROM users WHERE username = ? AND id != ?', [username, id]);
+  if ((existing as unknown[]).length > 0) {
+    return res.status(409).json({ error: 'Este nome de usuário já está em uso.' });
+  }
+
+  if (password) {
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE users SET name = ?, username = ?, password_hash = ? WHERE id = ?', [name, username, hash, id]);
+  } else {
+    await pool.query('UPDATE users SET name = ?, username = ? WHERE id = ?', [name, username, id]);
+  }
+
+  const [rows] = await pool.query('SELECT id, username, name, active FROM users WHERE id = ?', [id]);
+  const user = (rows as UserRow[])[0];
+  if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+  res.json({ id: String(user.id), username: user.username, name: user.name, active: !!user.active });
+}));
+
 usersRouter.patch('/:id/toggle', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
   await pool.query('UPDATE users SET active = NOT active WHERE id = ?', [id]);
