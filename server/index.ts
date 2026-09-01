@@ -30,6 +30,6 @@ app.get('*', (_req, res) => {
 });
 
 const port = Number(process.env.PORT || 3002);
-app.listen(port, () => {
-  console.log(`API rodando em http://localhost:${port}`);
+app.listen(port, '127.0.0.1', () => {
+  console.log(`API rodando em http://127.0.0.1:${port}`);
 });
