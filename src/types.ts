@@ -27,4 +27,11 @@ export interface UsageRecord {
   status: 'OPEN' | 'CLOSED';
 }
 
+export interface User {
+  id: string;
+  username: string;
+  name: string;
+  active: boolean;
+}
+
 export type Page = 'DASHBOARD' | 'HISTORICO' | 'CADASTROS';

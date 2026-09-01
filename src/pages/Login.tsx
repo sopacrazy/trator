@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
-import { Tractor, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Tractor, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import loginBg from '../assets/login-bg.jpg';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '../lib/api';
 
-export function Login({ onLogin }: { onLogin: () => void }) {
+export function Login() {
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError('Informe usuário e senha para continuar.');
       return;
     }
     setError('');
-    onLogin();
+    setIsSubmitting(true);
+    try {
+      await login(username, password);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Não foi possível entrar. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,8 +128,10 @@ export function Login({ onLogin }: { onLogin: () => void }) {
 
             <button
               type="submit"
-              className="mt-2 w-full py-2.5 bg-[#1B5E20] text-white rounded-lg font-medium hover:bg-[#144d18] transition-colors"
+              disabled={isSubmitting}
+              className="mt-2 w-full py-2.5 bg-[#1B5E20] text-white rounded-lg font-medium hover:bg-[#144d18] transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
+              {isSubmitting && <Loader2 size={18} className="animate-spin" />}
               Entrar
             </button>
           </form>

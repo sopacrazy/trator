@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { ApiError } from '../lib/api';
 
 export function FormSaida({ onClose }: { onClose: () => void }) {
   const { tractors, operators, usages, registerDeparture } = useAppContext();
@@ -16,24 +17,33 @@ export function FormSaida({ onClose }: { onClose: () => void }) {
   const [initialRpm, setInitialRpm] = useState('');
   const [destination, setDestination] = useState('');
   const [departureNotes, setDepartureNotes] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeOperators = operators.filter(o => o.active);
   const activeTractors = tractors.filter(t => t.active);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!operatorId || !tractorId || !departureTime || !initialRpm || !destination) return;
 
-    registerDeparture({
-      operatorId,
-      tractorId,
-      departureTime,
-      initialRpm: Number(initialRpm),
-      destination,
-      departureNotes
-    });
-    
-    onClose();
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await registerDeparture({
+        operatorId,
+        tractorId,
+        departureTime,
+        initialRpm: Number(initialRpm),
+        destination,
+        departureNotes
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Não foi possível registrar a saída.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -120,19 +130,22 @@ export function FormSaida({ onClose }: { onClose: () => void }) {
         ></textarea>
       </div>
 
+      {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">{error}</div>}
+
       <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={onClose}
           className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
         >
           Cancelar
         </button>
-        <button 
+        <button
           type="submit"
-          className="px-4 py-2 bg-[#1B5E20] text-white rounded-lg font-medium hover:bg-[#144d18] transition-colors"
+          disabled={isSubmitting}
+          className="px-4 py-2 bg-[#1B5E20] text-white rounded-lg font-medium hover:bg-[#144d18] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Confirmar Saída
+          {isSubmitting ? 'Enviando...' : 'Confirmar Saída'}
         </button>
       </div>
     </form>

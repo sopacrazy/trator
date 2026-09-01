@@ -1,123 +1,99 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Tractor, Operator, UsageRecord, Page } from '../types';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Tractor, Operator, UsageRecord, User, Page } from '../types';
+import { api } from '../lib/api';
 
 interface AppContextData {
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
+  isLoading: boolean;
   tractors: Tractor[];
   operators: Operator[];
   usages: UsageRecord[];
-  addTractor: (tractor: Omit<Tractor, 'id' | 'active'>) => void;
-  toggleTractorActive: (id: string) => void;
-  addOperator: (operator: Omit<Operator, 'id' | 'active'>) => void;
-  toggleOperatorActive: (id: string) => void;
-  registerDeparture: (usage: Omit<UsageRecord, 'id' | 'status'>) => void;
-  registerReturn: (usageId: string, returnTime: string, finalRpm: number, returnNotes?: string) => void;
+  users: User[];
+  addTractor: (tractor: Omit<Tractor, 'id' | 'active'>) => Promise<void>;
+  toggleTractorActive: (id: string) => Promise<void>;
+  addOperator: (operator: Omit<Operator, 'id' | 'active'>) => Promise<void>;
+  toggleOperatorActive: (id: string) => Promise<void>;
+  addUser: (user: { username: string; password: string; name: string }) => Promise<void>;
+  toggleUserActive: (id: string) => Promise<void>;
+  registerDeparture: (usage: Omit<UsageRecord, 'id' | 'status'>) => Promise<void>;
+  registerReturn: (usageId: string, returnTime: string, finalRpm: number, returnNotes?: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextData>({} as AppContextData);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [currentPage, setCurrentPage] = useState<Page>('DASHBOARD');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [tractors, setTractors] = useState<Tractor[]>([
-    { id: 't1', name: 'Trator 01', plate: 'MNB-1234', model: 'Massey Ferguson 4707', active: true },
-    { id: 't2', name: 'Trator 02', plate: 'OPQ-5678', model: 'John Deere 5075E', active: true },
-    { id: 't3', name: 'Trator 03', plate: 'RST-9012', model: 'New Holland TL5', active: true },
-  ]);
+  const [tractors, setTractors] = useState<Tractor[]>([]);
+  const [operators, setOperators] = useState<Operator[]>([]);
+  const [usages, setUsages] = useState<UsageRecord[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const [operators, setOperators] = useState<Operator[]>([
-    { id: 'o1', name: 'João Silva', registration: '1001', active: true },
-    { id: 'o2', name: 'Carlos Mendes', registration: '1002', active: true },
-    { id: 'o3', name: 'Pedro Alves', registration: '1003', active: true },
-    { id: 'o4', name: 'Ana Lima', registration: '1004', active: true },
-  ]);
+  useEffect(() => {
+    Promise.all([
+      api.get<Tractor[]>('/tractors'),
+      api.get<Operator[]>('/operators'),
+      api.get<UsageRecord[]>('/usages'),
+      api.get<User[]>('/users'),
+    ])
+      .then(([t, o, u, us]) => {
+        setTractors(t);
+        setOperators(o);
+        setUsages(u);
+        setUsers(us);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  const getTodayStr = () => {
-    const today = new Date();
-    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-    return today.toISOString().split('T')[0];
-  };
-  const todayStr = getTodayStr();
-
-  const [usages, setUsages] = useState<UsageRecord[]>([
-    {
-      id: 'u1',
-      tractorId: 't1',
-      operatorId: 'o1',
-      departureTime: `${todayStr}T08:30`,
-      initialRpm: 12450,
-      destination: 'Linha Verde - Roçada',
-      status: 'OPEN',
-    },
-    {
-      id: 'u2',
-      tractorId: 't2',
-      operatorId: 'o2',
-      departureTime: `${todayStr}T07:00`,
-      initialRpm: 8500,
-      destination: 'Parque Central - Manutenção',
-      returnTime: `${todayStr}T11:30`,
-      finalRpm: 8515,
-      status: 'CLOSED',
-    },
-    {
-      id: 'u3',
-      tractorId: 't3',
-      operatorId: 'o3',
-      departureTime: `${todayStr}T07:15`,
-      initialRpm: 5200,
-      destination: 'Estrada Sul - Nivelamento',
-      returnTime: `${todayStr}T16:00`,
-      finalRpm: 5240,
-      status: 'CLOSED',
-    },
-  ]);
-
-  const addTractor = (tractor: Omit<Tractor, 'id' | 'active'>) => {
-    setTractors([...tractors, { ...tractor, id: `t${Date.now()}`, active: true }]);
+  const addTractor = async (tractor: Omit<Tractor, 'id' | 'active'>) => {
+    const created = await api.post<Tractor>('/tractors', tractor);
+    setTractors(prev => [...prev, created]);
   };
 
-  const toggleTractorActive = (id: string) => {
-    const hasOpenUsage = usages.some(u => u.tractorId === id && u.status === 'OPEN');
-    if (hasOpenUsage) {
-      alert('Não é possível desativar um trator com uso em aberto.');
-      return;
-    }
-    setTractors(tractors.map(t => t.id === id ? { ...t, active: !t.active } : t));
+  const toggleTractorActive = async (id: string) => {
+    const updated = await api.patch<Tractor>(`/tractors/${id}/toggle`);
+    setTractors(prev => prev.map(t => t.id === id ? updated : t));
   };
 
-  const addOperator = (operator: Omit<Operator, 'id' | 'active'>) => {
-    setOperators([...operators, { ...operator, id: `o${Date.now()}`, active: true }]);
+  const addOperator = async (operator: Omit<Operator, 'id' | 'active'>) => {
+    const created = await api.post<Operator>('/operators', operator);
+    setOperators(prev => [...prev, created]);
   };
 
-  const toggleOperatorActive = (id: string) => {
-    const hasOpenUsage = usages.some(u => u.operatorId === id && u.status === 'OPEN');
-    if (hasOpenUsage) {
-      alert('Não é possível desativar um operador com uso em aberto.');
-      return;
-    }
-    setOperators(operators.map(o => o.id === id ? { ...o, active: !o.active } : o));
+  const toggleOperatorActive = async (id: string) => {
+    const updated = await api.patch<Operator>(`/operators/${id}/toggle`);
+    setOperators(prev => prev.map(o => o.id === id ? updated : o));
   };
 
-  const registerDeparture = (usage: Omit<UsageRecord, 'id' | 'status'>) => {
-    setUsages([...usages, { ...usage, id: `u${Date.now()}`, status: 'OPEN' }]);
+  const addUser = async (user: { username: string; password: string; name: string }) => {
+    const created = await api.post<User>('/users', user);
+    setUsers(prev => [...prev, created]);
   };
 
-  const registerReturn = (usageId: string, returnTime: string, finalRpm: number, returnNotes?: string) => {
-    setUsages(usages.map(u =>
-      u.id === usageId
-        ? { ...u, returnTime, finalRpm, returnNotes, status: 'CLOSED' }
-        : u
-    ));
+  const toggleUserActive = async (id: string) => {
+    const updated = await api.patch<User>(`/users/${id}/toggle`);
+    setUsers(prev => prev.map(u => u.id === id ? updated : u));
+  };
+
+  const registerDeparture = async (usage: Omit<UsageRecord, 'id' | 'status'>) => {
+    const created = await api.post<UsageRecord>('/usages', usage);
+    setUsages(prev => [created, ...prev]);
+  };
+
+  const registerReturn = async (usageId: string, returnTime: string, finalRpm: number, returnNotes?: string) => {
+    const updated = await api.patch<UsageRecord>(`/usages/${usageId}/return`, { returnTime, finalRpm, returnNotes });
+    setUsages(prev => prev.map(u => u.id === usageId ? updated : u));
   };
 
   return (
     <AppContext.Provider value={{
-      currentPage, setCurrentPage,
-      tractors, operators, usages,
+      currentPage, setCurrentPage, isLoading,
+      tractors, operators, usages, users,
       addTractor, toggleTractorActive,
       addOperator, toggleOperatorActive,
+      addUser, toggleUserActive,
       registerDeparture, registerReturn
     }}>
       {children}

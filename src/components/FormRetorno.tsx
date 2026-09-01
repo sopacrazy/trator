@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { ApiError } from '../lib/api';
 
 export function FormRetorno({ usageId, onClose }: { usageId: string, onClose: () => void }) {
   const { usages, tractors, operators, registerReturn } = useAppContext();
-  
+
   const usage = usages.find(u => u.id === usageId);
   const tractor = tractors.find(t => t.id === usage?.tractorId);
   const operator = operators.find(o => o.id === usage?.operatorId);
@@ -18,10 +19,11 @@ export function FormRetorno({ usageId, onClose }: { usageId: string, onClose: ()
   const [finalRpm, setFinalRpm] = useState('');
   const [returnNotes, setReturnNotes] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!usage || !tractor || !operator) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -39,8 +41,15 @@ export function FormRetorno({ usageId, onClose }: { usageId: string, onClose: ()
       return;
     }
 
-    registerReturn(usage.id, returnTime, finalRpmNum, returnNotes);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await registerReturn(usage.id, returnTime, finalRpmNum, returnNotes);
+      onClose();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Não foi possível registrar o retorno.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const rpmTotal = finalRpm ? (Number(finalRpm) - usage.initialRpm).toFixed(0) : '0';
@@ -107,11 +116,12 @@ export function FormRetorno({ usageId, onClose }: { usageId: string, onClose: ()
         >
           Cancelar
         </button>
-        <button 
+        <button
           type="submit"
-          className="px-4 py-2 bg-[#1B5E20] text-white rounded-lg font-medium hover:bg-[#144d18] transition-colors"
+          disabled={isSubmitting}
+          className="px-4 py-2 bg-[#1B5E20] text-white rounded-lg font-medium hover:bg-[#144d18] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Confirmar Retorno
+          {isSubmitting ? 'Enviando...' : 'Confirmar Retorno'}
         </button>
       </div>
     </form>
